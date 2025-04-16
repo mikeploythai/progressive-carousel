@@ -1,0 +1,127 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  width: min(64rem, 100%);
+  margin-inline: auto;
+}
+
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.carousel__trackContainer {
+  --margin: 0.5rem;
+
+  background-color: white;
+  border: 1px solid;
+  border-radius: 1rem;
+  margin-bottom: var(--margin);
+  margin-inline-end: var(--margin);
+  box-shadow: 0.5rem 0.5rem 0 currentColor;
+
+  &:has(.carousel__track:focus) {
+    outline-color: royalblue !important;
+  }
+}
+
+.carousel__track {
+  padding: 1rem;
+  gap: 1rem;
+
+  & > .carousel__slide {
+    scroll-margin-inline-start: 1rem;
+  }
+}
+
+.carousel__slide {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid;
+  border-radius: 0.375rem;
+  padding: 1rem;
+
+  & > blockquote {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: center;
+    border-inline-start: 0.25rem solid royalblue;
+    padding-inline-start: 1rem;
+    font-style: italic;
+
+    & > p::before {
+      content: open-quote;
+    }
+
+    & > p::after {
+      content: close-quote;
+    }
+  }
+
+  & > figcaption {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: lightslategray;
+    margin-top: auto;
+  }
+}
+
+.carousel__slide--singlePeek {
+  width: 80% !important;
+}
+
+.carousel__slide--multiPeek {
+  width: 40% !important;
+}
+
+.carousel__controls {
+  margin-inline-start: auto;
+}
+
+.carousel__control {
+  --ease: 150ms ease;
+
+  background-color: black;
+  color: white;
+  border-radius: 9999px;
+  transition: opacity var(--ease), background-color var(--ease);
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: rgba(0 0 0 / 80%);
+    }
+  }
+}
+
+.carousel__trackContainer--responsive {
+  margin-inline: -1rem;
+
+  &:has(.carousel__track:focus) {
+    outline: 0.25rem solid;
+    outline-color: royalblue !important;
+    outline-offset: -0.25rem;
+  }
+}
+
+@media screen and (min-width: 48rem) {
+  .carousel__trackContainer--responsive {
+    --margin: 0.5rem;
+
+    background-color: white;
+    border: 1px solid;
+    border-radius: 1rem;
+    margin-bottom: var(--margin);
+    margin-inline: 0 var(--margin);
+    box-shadow: 0.5rem 0.5rem 0 currentColor;
+
+    &:has(.carousel__track:focus) {
+      outline-offset: 0;
+    }
+  }
+}
