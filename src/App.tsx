@@ -28,7 +28,7 @@ function App() {
           </a>
         </header>
 
-        <h2>Unstyled</h2>
+        <h2>Base styles</h2>
 
         <Carousel>
           <CarouselTrack>
