@@ -133,7 +133,7 @@ function App() {
                 as="figure"
                 className={clsx(
                   styles.carousel__slide,
-                  styles["carousel__slide--multiPeek"]
+                  styles["carousel__slide--responsive"]
                 )}
               >
                 <blockquote>

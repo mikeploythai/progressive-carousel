@@ -107,10 +107,8 @@
     outline-color: royalblue !important;
     outline-offset: -0.25rem;
   }
-}
 
-@media screen and (min-width: 48rem) {
-  .carousel__trackContainer--responsive {
+  @media screen and (min-width: 48rem) {
     --margin: 0.5rem;
 
     background-color: white;
@@ -123,5 +121,13 @@
     &:has(.carousel__track:focus) {
       outline-offset: 0;
     }
+  }
+}
+
+.carousel__slide--responsive {
+  width: 80% !important;
+
+  @media screen and (min-width: 48rem) {
+    width: 40% !important;
   }
 }
