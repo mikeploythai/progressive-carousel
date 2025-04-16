@@ -18,6 +18,14 @@ function App() {
             A headless React carousel component that utilizes CSS scroll
             snapping and JavaScript for progressive enhancement.
           </p>
+
+          <a
+            href="https://github.com/mikeploythai/progressive-carousel/tree/main/src/components/carousel"
+            target="_blank"
+            rel="noreferrer"
+          >
+            View source code
+          </a>
         </header>
 
         <h2>Unstyled</h2>
