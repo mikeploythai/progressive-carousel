@@ -8,6 +8,10 @@ A headless React carousel component that utilizes CSS scroll-snapping and JavaSc
 
 Documentation coming at some point!
 
+## ⚠️ KNOWN ISSUES
+
+- Does not support carousels that uses `proximity` strictness
+
 ---
 
 Created by Mike Ploythai. MIT.
