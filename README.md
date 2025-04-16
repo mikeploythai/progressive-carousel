@@ -11,6 +11,7 @@ Documentation coming at some point!
 ## ⚠️ KNOWN ISSUES
 
 - Does not support carousels that uses `proximity` strictness
+- Carousel overshoots in iOS safari
 
 ---
 
