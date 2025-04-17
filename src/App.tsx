@@ -1,10 +1,9 @@
 import styles from "@/styles/app.module.css";
-import clsx from "clsx";
 import {
   Carousel,
+  CarouselContent,
   CarouselControls,
   CarouselSlide,
-  CarouselTrack,
 } from "./components/carousel";
 import testimonials from "./data/testimonials";
 
@@ -28,12 +27,12 @@ function App() {
           </a>
         </header>
 
-        <h2>Base styles</h2>
+        <h2>Base styles only</h2>
 
-        <Carousel>
-          <CarouselTrack>
-            {testimonials.map(({ id, testimonial, name, company }) => (
-              <CarouselSlide key={id} as="figure">
+        <Carousel numOfSlides={testimonials.length}>
+          <CarouselContent>
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
+              <CarouselSlide key={id} as="figure" slideNum={i + 1}>
                 <blockquote>
                   <p>{testimonial}</p>
                 </blockquote>
@@ -43,28 +42,26 @@ function App() {
                 </figcaption>
               </CarouselSlide>
             ))}
-          </CarouselTrack>
+          </CarouselContent>
 
           <CarouselControls />
         </Carousel>
 
-        <h2>Styled</h2>
-
-        <h3>Single slide in view with peek</h3>
-
-        <Carousel className={styles.carousel}>
-          <CarouselTrack
-            className={styles.carousel__trackContainer}
-            track={{ className: styles.carousel__track }}
+        <h2>Neobrutalist</h2>
+        <Carousel
+          className={styles.neobrutalistCarousel}
+          numOfSlides={testimonials.length}
+        >
+          <CarouselContent
+            className={styles.neobrutalistCarousel__content}
+            track={{ className: styles.neobrutalistCarousel__track }}
           >
-            {testimonials.map(({ id, testimonial, name, company }) => (
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
               <CarouselSlide
                 key={id}
                 as="figure"
-                className={clsx(
-                  styles.carousel__slide,
-                  styles["carousel__slide--singlePeek"]
-                )}
+                slideNum={i + 1}
+                className={styles.neobrutalistCarousel__slide}
               >
                 <blockquote>
                   <p>{testimonial}</p>
@@ -75,31 +72,29 @@ function App() {
                 </figcaption>
               </CarouselSlide>
             ))}
-          </CarouselTrack>
+          </CarouselContent>
 
           <CarouselControls
-            className={styles.carousel__controls}
-            control={{
-              className: styles.carousel__control,
-            }}
+            className={styles.neobrutalistCarousel__controls}
+            control={{ className: styles.neobrutalistCarousel__control }}
           />
         </Carousel>
 
-        <h3>Multiple slides in view with peek</h3>
-
-        <Carousel className={styles.carousel}>
-          <CarouselTrack
-            className={styles.carousel__trackContainer}
-            track={{ className: styles.carousel__track }}
+        <h2>Minimal Style</h2>
+        <Carousel
+          className={styles.minimalCarousel}
+          numOfSlides={testimonials.length}
+        >
+          <CarouselContent
+            className={styles.minimalCarousel__content}
+            track={{ className: styles.minimalCarousel__track }}
           >
-            {testimonials.map(({ id, testimonial, name, company }) => (
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
               <CarouselSlide
                 key={id}
                 as="figure"
-                className={clsx(
-                  styles.carousel__slide,
-                  styles["carousel__slide--multiPeek"]
-                )}
+                slideNum={i + 1}
+                className={styles.minimalCarousel__slide}
               >
                 <blockquote>
                   <p>{testimonial}</p>
@@ -110,31 +105,29 @@ function App() {
                 </figcaption>
               </CarouselSlide>
             ))}
-          </CarouselTrack>
+          </CarouselContent>
 
           <CarouselControls
-            className={styles.carousel__controls}
-            control={{
-              className: styles.carousel__control,
-            }}
+            className={styles.minimalCarousel__controls}
+            control={{ className: styles.minimalCarousel__control }}
           />
         </Carousel>
 
-        <h3>Multiple slides w/ responsive styles</h3>
-
-        <Carousel className={styles.carousel}>
-          <CarouselTrack
-            className={styles["carousel__trackContainer--responsive"]}
-            track={{ className: styles.carousel__track }}
+        <h2>Card Style</h2>
+        <Carousel
+          className={styles.cardCarousel}
+          numOfSlides={testimonials.length}
+        >
+          <CarouselContent
+            className={styles.cardCarousel__content}
+            track={{ className: styles.cardCarousel__track }}
           >
-            {testimonials.map(({ id, testimonial, name, company }) => (
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
               <CarouselSlide
                 key={id}
                 as="figure"
-                className={clsx(
-                  styles.carousel__slide,
-                  styles["carousel__slide--responsive"]
-                )}
+                slideNum={i + 1}
+                className={styles.cardCarousel__slide}
               >
                 <blockquote>
                   <p>{testimonial}</p>
@@ -145,13 +138,77 @@ function App() {
                 </figcaption>
               </CarouselSlide>
             ))}
-          </CarouselTrack>
+          </CarouselContent>
 
           <CarouselControls
-            className={styles.carousel__controls}
-            control={{
-              className: styles.carousel__control,
-            }}
+            className={styles.cardCarousel__controls}
+            control={{ className: styles.cardCarousel__control }}
+          />
+        </Carousel>
+
+        <h2>Mobile-Friendly</h2>
+        <Carousel
+          className={styles.mobileCarousel}
+          numOfSlides={testimonials.length}
+        >
+          <CarouselContent
+            className={styles.mobileCarousel__content}
+            track={{ className: styles.mobileCarousel__track }}
+          >
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
+              <CarouselSlide
+                key={id}
+                as="figure"
+                slideNum={i + 1}
+                className={styles.mobileCarousel__slide}
+              >
+                <blockquote>
+                  <p>{testimonial}</p>
+                </blockquote>
+
+                <figcaption>
+                  {name} &mdash; {company}
+                </figcaption>
+              </CarouselSlide>
+            ))}
+          </CarouselContent>
+
+          <CarouselControls
+            className={styles.mobileCarousel__controls}
+            control={{ className: styles.mobileCarousel__control }}
+          />
+        </Carousel>
+
+        <h2>Dark Theme</h2>
+        <Carousel
+          className={styles.darkCarousel}
+          numOfSlides={testimonials.length}
+        >
+          <CarouselContent
+            className={styles.darkCarousel__content}
+            track={{ className: styles.darkCarousel__track }}
+          >
+            {testimonials.map(({ id, testimonial, name, company }, i) => (
+              <CarouselSlide
+                key={id}
+                as="figure"
+                slideNum={i + 1}
+                className={styles.darkCarousel__slide}
+              >
+                <blockquote>
+                  <p>{testimonial}</p>
+                </blockquote>
+
+                <figcaption>
+                  {name} &mdash; {company}
+                </figcaption>
+              </CarouselSlide>
+            ))}
+          </CarouselContent>
+
+          <CarouselControls
+            className={styles.darkCarousel__controls}
+            control={{ className: styles.darkCarousel__control }}
           />
         </Carousel>
       </div>
