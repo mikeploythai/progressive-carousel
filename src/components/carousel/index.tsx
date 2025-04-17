@@ -42,6 +42,7 @@ const CarouselContent = ({
   return (
     <div className={clsx(styles.carousel__content, className)} {...props}>
       <div
+        id={id}
         ref={trackRef}
         tabIndex={0}
         role="region"
