@@ -2,142 +2,122 @@ import useMediaQuery from "@/hooks/use-media-query";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import CarouselContext from "./context";
 
-const SCROLL_END_TOLERANCE = 1;
-
 const useCarouselControls = () => {
-  const store = useContext(CarouselContext);
-  if (!store)
+  const ctx = useContext(CarouselContext);
+  if (!ctx)
     throw new Error(
-      "useCarouselControls must be used within a CarouselContext"
+      "useCarouselControls must be used within a CarouselContext",
     );
 
-  const { carouselTrackRef } = store;
-  const [isPreviousDisabled, setIsPreviousDisabled] = useState(true);
+  const { trackRef } = ctx;
+  const [isPrevDisabled, setIsPrevDisabled] = useState(true);
   const [isNextDisabled, setIsNextDisabled] = useState(false);
-  const scrollRafId = useRef<number | null>(null);
+  const [visibleSlides, setVisibleSlides] = useState<Element[]>([]);
+  const slidesRef = useRef<Element[]>([]);
+  const rafIdRef = useRef<number | null>(null);
 
   const updateButtonStates = useCallback(() => {
-    const track = carouselTrackRef.current;
+    const track = trackRef.current;
     if (!track) return;
 
-    const { scrollLeft, scrollWidth, clientWidth } = track;
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
 
-    setIsPreviousDisabled(scrollLeft <= 0);
-    setIsNextDisabled(
-      scrollLeft + clientWidth >= scrollWidth - SCROLL_END_TOLERANCE
-    );
-  }, [carouselTrackRef]);
+    rafIdRef.current = requestAnimationFrame(() => {
+      const { scrollLeft, scrollWidth, clientWidth } = track;
+      const tolerance = 1;
 
-  const getVisibleSlides = useCallback(() => {
-    const track = carouselTrackRef.current;
-    if (!track) return [];
-
-    const slides = Array.from(track.children);
-    const trackRect = track.getBoundingClientRect();
-
-    return slides.filter((slide) => {
-      const slideRect = slide.getBoundingClientRect();
-
-      return (
-        slideRect.left >= trackRect.left && slideRect.right <= trackRect.right
-      );
+      setIsPrevDisabled(scrollLeft <= tolerance);
+      setIsNextDisabled(scrollLeft + clientWidth >= scrollWidth - tolerance);
+      rafIdRef.current = null;
     });
-  }, [carouselTrackRef]);
+  }, [trackRef]);
 
   const prefersReducedMotion = useMediaQuery(
-    "(prefers-reduced-motion: reduce)"
+    "(prefers-reduced-motion: reduce)",
   );
 
   const scrollToSlide = useCallback(
     (slide: Element) => {
-      const track = carouselTrackRef.current;
+      const track = trackRef.current;
       if (!track) return;
 
       track.focus({ preventScroll: true });
 
-      const targetScroll =
+      const left =
         slide.getBoundingClientRect().left -
         track.getBoundingClientRect().left +
         track.scrollLeft;
 
-      if (prefersReducedMotion) {
-        track.scrollTo({
-          left: targetScroll,
-          behavior: "auto",
-        });
-      } else {
-        if (scrollRafId.current !== null)
-          cancelAnimationFrame(scrollRafId.current);
-
-        scrollRafId.current = requestAnimationFrame(() => {
-          track.scrollTo({
-            left: targetScroll,
-            behavior: "smooth",
-          });
-
-          scrollRafId.current = null;
-        });
-      }
+      track.scrollTo({
+        left,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
     },
-    [carouselTrackRef, prefersReducedMotion]
+    [prefersReducedMotion, trackRef],
   );
 
-  const scrollToPrevious = useCallback(() => {
-    if (isPreviousDisabled) return;
+  const scrollToPrev = useCallback(() => {
+    if (isPrevDisabled || visibleSlides.length === 0) return;
 
-    const track = carouselTrackRef.current;
-    if (!track) return;
-
-    const visibleSlides = getVisibleSlides();
-    if (visibleSlides.length === 0) return;
-
-    const firstVisibleSlide = visibleSlides[0];
-    const previousSlide = firstVisibleSlide.previousElementSibling;
-
-    scrollToSlide(previousSlide!);
-  }, [carouselTrackRef, getVisibleSlides, isPreviousDisabled, scrollToSlide]);
+    const firstVisible = visibleSlides[0];
+    const prevSlide = firstVisible?.previousElementSibling;
+    if (prevSlide) scrollToSlide(prevSlide);
+  }, [isPrevDisabled, visibleSlides, scrollToSlide]);
 
   const scrollToNext = useCallback(() => {
-    if (isNextDisabled) return;
+    if (isNextDisabled || visibleSlides.length === 0) return;
 
-    const track = carouselTrackRef.current;
-    if (!track) return;
-
-    const visibleSlides = getVisibleSlides();
-    if (visibleSlides.length === 0) return;
-
-    const firstVisibleSlide = visibleSlides[0];
-    const nextSlide = firstVisibleSlide.nextElementSibling;
-
-    scrollToSlide(nextSlide!);
-  }, [carouselTrackRef, getVisibleSlides, isNextDisabled, scrollToSlide]);
+    const firstVisible = visibleSlides[0];
+    const nextSlide = firstVisible?.nextElementSibling;
+    if (nextSlide) scrollToSlide(nextSlide);
+  }, [isNextDisabled, scrollToSlide, visibleSlides]);
 
   useEffect(() => {
-    const track = carouselTrackRef.current;
+    const track = trackRef.current;
     if (!track) return;
 
+    slidesRef.current = Array.from(track.children);
     updateButtonStates();
 
-    let rafId: number | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const currentSlides = slidesRef.current;
 
-    const handleScroll = () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
+        const currentlyVisible = entries
+          .filter((entry) => entry.isIntersecting)
+          .map((entry) => entry.target)
+          .sort((a, b) => {
+            const aIndex = currentSlides.indexOf(a);
+            const bIndex = currentSlides.indexOf(b);
+            return aIndex - bIndex;
+          });
 
-      rafId = requestAnimationFrame(() => {
-        updateButtonStates();
-        rafId = null;
-      });
-    };
+        setVisibleSlides((prevVisible) => {
+          if (
+            currentlyVisible.length === prevVisible.length &&
+            currentlyVisible.every((slide, i) => slide === prevVisible[i])
+          )
+            return prevVisible;
 
-    track.addEventListener("scroll", handleScroll, { passive: true });
+          return currentlyVisible;
+        });
+      },
+      {
+        root: track,
+        threshold: 0.5,
+      },
+    );
+
+    slidesRef.current.forEach((slide) => observer.observe(slide));
+
+    track.addEventListener("scroll", updateButtonStates, { passive: true });
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target !== track && !track.contains(e.target as Node)) return;
-
       let isHandled = false;
 
       if (e.key === "ArrowLeft") {
-        scrollToPrevious();
+        scrollToPrev();
         isHandled = true;
       } else if (e.key === "ArrowRight") {
         scrollToNext();
@@ -149,18 +129,16 @@ const useCarouselControls = () => {
 
     track.addEventListener("keydown", handleKeyDown);
 
-    const resizeObserver = new ResizeObserver(handleScroll);
-    resizeObserver.observe(track);
-
     return () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      track.removeEventListener("scroll", handleScroll);
-      track.removeEventListener("keydown", handleKeyDown);
-      resizeObserver.unobserve(track);
-    };
-  }, [carouselTrackRef, scrollToNext, scrollToPrevious, updateButtonStates]);
+      if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
 
-  return { scrollToPrevious, scrollToNext, isPreviousDisabled, isNextDisabled };
+      observer.disconnect();
+      track.removeEventListener("scroll", updateButtonStates);
+      track.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [scrollToNext, scrollToPrev, trackRef, updateButtonStates]);
+
+  return { scrollToPrev, scrollToNext, isPrevDisabled, isNextDisabled };
 };
 
 export default useCarouselControls;

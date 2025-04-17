@@ -1,9 +1,5 @@
-.carousel__trackContainer {
+.carousel__content {
   overflow: clip;
-
-  &:has(.carousel__track:focus) {
-    outline: 0.25rem solid;
-  }
 }
 
 .carousel__track {
@@ -11,42 +7,13 @@
   scroll-snap-type: x mandatory;
   overflow-x: auto;
 
-  &:focus-visible {
-    outline-style: none;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    scroll-behavior: smooth;
+  &:focus {
+    outline: none;
   }
 }
 
 .carousel__slide {
+  width: 100%;
   flex-shrink: 0;
   scroll-snap-align: start;
-  width: 100%;
-}
-
-.carousel__controlsContainer {
-  display: flex;
-  gap: 0.5rem;
-
-  @media (scripting: none) {
-    display: none;
-  }
-}
-
-.carousel__control {
-  display: inline-grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-
-  &:focus-visible {
-    outline: 0.25rem solid;
-  }
-
-  &:disabled {
-    opacity: 50%;
-    cursor: not-allowed;
-  }
 }

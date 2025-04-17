@@ -1,51 +1,54 @@
+"use client";
+
 import clsx from "clsx";
 import { useContext, useId, useRef } from "react";
 import CarouselContext from "./context";
 import useCarouselControls from "./hook";
 import styles from "./styles.module.css";
 
-const Carousel = (props: React.ComponentProps<"div">) => {
-  const carouselId = useId();
-  const carouselTrackRef = useRef<HTMLDivElement>(null);
+interface CarouselProps extends React.ComponentProps<"div"> {
+  numOfSlides: number;
+}
+
+const Carousel = ({ numOfSlides, ...props }: CarouselProps) => {
+  const id = useId();
+  const trackRef = useRef<HTMLDivElement>(null);
 
   return (
-    <CarouselContext.Provider value={{ carouselId, carouselTrackRef }}>
+    <CarouselContext.Provider value={{ id, trackRef, numOfSlides }}>
       <div {...props} />
     </CarouselContext.Provider>
   );
 };
 
-interface CarouselTrackProps extends React.ComponentProps<"div"> {
+interface CarouselContentProps extends React.ComponentProps<"div"> {
   track?: Omit<
     React.ComponentPropsWithoutRef<"div">,
     "children" | "tabIndex" | "role" | "aria-label" | "aria-roledescription"
   >;
 }
 
-const CarouselTrack = ({
+const CarouselContent = ({
   track = {},
   className,
   children,
-  ...containerProps
-}: CarouselTrackProps) => {
-  const store = useContext(CarouselContext);
-  if (!store)
-    throw new Error("CarouselTrack must be used within a CarouselContext");
+  ...props
+}: CarouselContentProps) => {
+  const ctx = useContext(CarouselContext);
+  if (!ctx)
+    throw new Error("CarouselContent must be used within a CarouselContext");
 
-  const { carouselId, carouselTrackRef } = store;
+  const { id, trackRef } = ctx;
   const { className: trackClassName, ...trackProps } = track;
 
   return (
-    <div
-      className={clsx(styles.carousel__trackContainer, className)}
-      {...containerProps}
-    >
+    <div className={clsx(styles.carousel__content, className)} {...props}>
       <div
-        ref={carouselTrackRef}
+        ref={trackRef}
         tabIndex={0}
         role="region"
         className={clsx(styles.carousel__track, trackClassName)}
-        aria-label={`Carousel track for carousel ${carouselId}`}
+        aria-label={`Content for carousel ${id}`}
         aria-roledescription="carousel"
         {...trackProps}
       >
@@ -57,26 +60,36 @@ const CarouselTrack = ({
 
 type CarouselSlideProps<T extends React.ElementType> = {
   as?: T;
-} & Omit<React.ComponentPropsWithoutRef<T>, "as">;
+  slideNum: number;
+} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "slideNum" | "aria-label">;
 
-const CarouselSlide = <T extends React.ElementType = "div">({
+const CarouselSlide = <T extends React.ElementType>({
   as,
+  slideNum,
   className,
   ...props
 }: CarouselSlideProps<T>) => {
-  const store = useContext(CarouselContext);
-  if (!store)
+  const ctx = useContext(CarouselContext);
+  if (!ctx)
     throw new Error("CarouselSlide must be used within a CarouselContext");
 
+  const { id, numOfSlides } = ctx;
   const Component: React.ElementType = as ?? "div";
 
   return (
-    <Component className={clsx(styles.carousel__slide, className)} {...props} />
+    <Component
+      className={clsx(styles.carousel__slide, className)}
+      aria-label={`Slide ${slideNum} of ${numOfSlides} in carousel ${id}`}
+      {...props}
+    />
   );
 };
 
 interface CarouselControlsProps
-  extends Omit<React.ComponentProps<"div">, "role" | "aria-label"> {
+  extends Omit<
+    React.ComponentProps<"div">,
+    "children" | "role" | "aria-label"
+  > {
   control?: Omit<
     React.ComponentPropsWithoutRef<"button">,
     | "children"
@@ -89,33 +102,25 @@ interface CarouselControlsProps
 }
 
 const CarouselControls = ({
-  className,
-  control = {},
-  ...containerProps
+  control: controlProps = {},
+  ...props
 }: CarouselControlsProps) => {
-  const store = useContext(CarouselContext);
-  if (!store)
+  const ctx = useContext(CarouselContext);
+  if (!ctx)
     throw new Error("CarouselControls must be used within a CarouselContext");
 
-  const { carouselId } = store;
-  const { className: controlClassName, ...controlProps } = control;
-  const { scrollToPrevious, scrollToNext, isPreviousDisabled, isNextDisabled } =
+  const { id } = ctx;
+  const { scrollToPrev, scrollToNext, isPrevDisabled, isNextDisabled } =
     useCarouselControls();
 
   return (
-    <div
-      role="group"
-      className={clsx(styles.carousel__controlsContainer, className)}
-      aria-label={`Carousel controls for carousel ${carouselId}`}
-      {...containerProps}
-    >
+    <div role="group" aria-label={`Controls for carousel ${id}`} {...props}>
       <button
         type="button"
-        className={clsx(styles.carousel__control, controlClassName)}
-        onClick={scrollToPrevious}
-        disabled={isPreviousDisabled}
-        aria-label="Previous carousel slide"
-        aria-controls={carouselId}
+        onClick={scrollToPrev}
+        disabled={isPrevDisabled}
+        aria-label="Previous slide"
+        aria-controls={id}
         {...controlProps}
       >
         &lsaquo;
@@ -123,11 +128,10 @@ const CarouselControls = ({
 
       <button
         type="button"
-        className={clsx(styles.carousel__control, controlClassName)}
         onClick={scrollToNext}
         disabled={isNextDisabled}
-        aria-label="Next carousel slide"
-        aria-controls={carouselId}
+        aria-label="Next slide"
+        aria-controls={id}
         {...controlProps}
       >
         &rsaquo;
@@ -136,4 +140,4 @@ const CarouselControls = ({
   );
 };
 
-export { Carousel, CarouselControls, CarouselSlide, CarouselTrack };
+export { Carousel, CarouselContent, CarouselControls, CarouselSlide };
