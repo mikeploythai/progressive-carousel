@@ -23,7 +23,6 @@
 .carousel__slide {
   flex-shrink: 0;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
   width: 100%;
 }
 
