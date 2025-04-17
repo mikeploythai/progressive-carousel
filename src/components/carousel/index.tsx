@@ -1,5 +1,3 @@
-"use client";
-
 import clsx from "clsx";
 import { useContext, useId, useRef } from "react";
 import CarouselContext from "./context";
