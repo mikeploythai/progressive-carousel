@@ -1,5 +1,5 @@
 import useMediaQuery from "@/hooks/use-media-query";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import CarouselContext from "./context";
 
 const SCROLL_END_TOLERANCE = 1;
@@ -14,6 +14,7 @@ const useCarouselControls = () => {
   const { carouselTrackRef } = store;
   const [isPreviousDisabled, setIsPreviousDisabled] = useState(true);
   const [isNextDisabled, setIsNextDisabled] = useState(false);
+  const scrollRafId = useRef<number | null>(null);
 
   const updateButtonStates = useCallback(() => {
     const track = carouselTrackRef.current;
@@ -27,33 +28,89 @@ const useCarouselControls = () => {
     );
   }, [carouselTrackRef]);
 
+  const getVisibleSlides = useCallback(() => {
+    const track = carouselTrackRef.current;
+    if (!track) return [];
+
+    const slides = Array.from(track.children);
+    const trackRect = track.getBoundingClientRect();
+
+    return slides.filter((slide) => {
+      const slideRect = slide.getBoundingClientRect();
+
+      return (
+        slideRect.left >= trackRect.left && slideRect.right <= trackRect.right
+      );
+    });
+  }, [carouselTrackRef]);
+
   const prefersReducedMotion = useMediaQuery(
     "(prefers-reduced-motion: reduce)"
   );
 
+  const scrollToSlide = useCallback(
+    (slide: Element) => {
+      const track = carouselTrackRef.current;
+      if (!track) return;
+
+      track.focus({ preventScroll: true });
+
+      const targetScroll =
+        slide.getBoundingClientRect().left -
+        track.getBoundingClientRect().left +
+        track.scrollLeft;
+
+      if (prefersReducedMotion) {
+        track.scrollTo({
+          left: targetScroll,
+          behavior: "auto",
+        });
+      } else {
+        if (scrollRafId.current !== null)
+          cancelAnimationFrame(scrollRafId.current);
+
+        scrollRafId.current = requestAnimationFrame(() => {
+          track.scrollTo({
+            left: targetScroll,
+            behavior: "smooth",
+          });
+
+          scrollRafId.current = null;
+        });
+      }
+    },
+    [carouselTrackRef, prefersReducedMotion]
+  );
+
   const scrollToPrevious = useCallback(() => {
+    if (isPreviousDisabled) return;
+
     const track = carouselTrackRef.current;
     if (!track) return;
 
-    track.focus({ preventScroll: true });
+    const visibleSlides = getVisibleSlides();
+    if (visibleSlides.length === 0) return;
 
-    track.scrollBy({
-      left: -track.clientWidth,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
-  }, [carouselTrackRef, prefersReducedMotion]);
+    const firstVisibleSlide = visibleSlides[0];
+    const previousSlide = firstVisibleSlide.previousElementSibling;
+
+    scrollToSlide(previousSlide!);
+  }, [carouselTrackRef, getVisibleSlides, isPreviousDisabled, scrollToSlide]);
 
   const scrollToNext = useCallback(() => {
+    if (isNextDisabled) return;
+
     const track = carouselTrackRef.current;
     if (!track) return;
 
-    track.focus({ preventScroll: true });
+    const visibleSlides = getVisibleSlides();
+    if (visibleSlides.length === 0) return;
 
-    track.scrollBy({
-      left: track.clientWidth,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
-  }, [carouselTrackRef, prefersReducedMotion]);
+    const firstVisibleSlide = visibleSlides[0];
+    const nextSlide = firstVisibleSlide.nextElementSibling;
+
+    scrollToSlide(nextSlide!);
+  }, [carouselTrackRef, getVisibleSlides, isNextDisabled, scrollToSlide]);
 
   useEffect(() => {
     const track = carouselTrackRef.current;
@@ -92,7 +149,7 @@ const useCarouselControls = () => {
 
     track.addEventListener("keydown", handleKeyDown);
 
-    const resizeObserver = new ResizeObserver(updateButtonStates);
+    const resizeObserver = new ResizeObserver(handleScroll);
     resizeObserver.observe(track);
 
     return () => {
@@ -101,7 +158,7 @@ const useCarouselControls = () => {
       track.removeEventListener("keydown", handleKeyDown);
       resizeObserver.unobserve(track);
     };
-  }, [scrollToNext, scrollToPrevious, carouselTrackRef, updateButtonStates]);
+  }, [carouselTrackRef, scrollToNext, scrollToPrevious, updateButtonStates]);
 
   return { scrollToPrevious, scrollToNext, isPreviousDisabled, isNextDisabled };
 };
